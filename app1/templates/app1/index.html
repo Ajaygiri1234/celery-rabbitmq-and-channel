@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+   <meta charset = "utf-8" />
+   <title>WebSocket Test</title>
+   <body>
+      <span>name</span><input type="text" id = "name">
+      <h2>WebSocket Test</h2>
+      <div style="width: 500px;">
+   <div id = "output"></div> 
+   <form form onsubmit = "event.preventDefault()">
+      <input type="text" name ="send" id = "send"><button onclick="hello()">Send</button>
+   </form>
+</div>
+      
+
+   <script language = "javascript" type = "text/javascript">
+      var wsUri = "ws://localhost:8000/sock/";
+      var output;
+		function hello(){
+         const A= document.getElementById("name").value
+          name =A
+            while(name =="null" || name==""){
+               name = prompt("Please enter your name")
+               }
+               document.getElementById("name").value=name
+            
+         
+         let msg = document.getElementById("send").value
+         doSend(msg)
+      }
+      function init() {
+         output = document.getElementById("output");
+         testWebSocket();
+      }
+		
+      function testWebSocket() {
+         websocket = new WebSocket(wsUri);
+			
+         websocket.onopen = function(evt) {
+            onOpen(evt)
+         };
+		
+         websocket.onmessage = function(evt) {
+            onMessage(evt)
+         };
+		
+         websocket.onerror = function(evt) {
+            onError(evt)
+         };
+      }
+		
+      function onOpen(evt) {
+         writeToScreen("CONNECTED");
+         console.log("WebSocket rocks");
+      }
+		
+      function onMessage(evt) {
+         data =JSON.parse(evt.data)
+         if (data["name"]==(document.getElementById("name").value)){
+            writeToScreen('<p style = "color: red;text-align: right">' +
+            data["messge"]+'</span>'); 
+
+         }
+         else{
+            writeToScreen('<p style = "color: blue;">'+ 
+            data["messge"]+'</span>'); 
+         }
+         
+            // websocket.close();
+      }
+
+      function onError(evt) {
+         writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+      }
+		
+      function doSend(message) {
+         const A= document.getElementById("name").value
+         p= {messge:message,name: A}
+         // writeToScreen("SENT: " + message);
+          websocket.send(JSON.stringify(p));
+      }
+		
+      function writeToScreen(message) {
+         
+         var pre = document.createElement("p"); 
+         pre.style.wordWrap = "break-word"; 
+         pre.innerHTML = message; output.appendChild(pre);
+      }
+		
+      window.addEventListener("load", init, false);
+   </script>
+
+	
+   
+</body>
+	
+</html>

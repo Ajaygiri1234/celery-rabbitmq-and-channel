@@ -1,0 +1,74 @@
+version: '3.9'
+
+services:
+    web:
+        container_name: djangoappforcelery
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: web
+            
+        restart: always
+  
+
+        volumes:
+            - .:/code
+        
+        ports:
+            - 8000:8000
+    rabbitmq3:
+      container_name: "rabbitmq"
+      image: rabbitmq:3-management-alpine
+      volumes:
+            - ./rabbitmq-data:/var/lib/rabbitmq
+      environment:
+            - RABBITMQ_DEFAULT_USER="admin"
+            - RABBITMQ_DEFAULT_PASS="admin"
+      ports:
+        - 5672:5672
+        - 15672:15672
+
+    
+        
+      
+        # rabbitmqctl add_user admin admin
+        # rabbitmqctl set_user_tags admin administrator
+        # rabbitmqctl set_permissions -p / admin ".*" ".*" ".*"
+
+    celery_worker:
+        container_name: "celery-worker"
+        env_file:   .env
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: celery
+        volumes:
+            - .:/code
+        environment:
+          - use_container_rabbitmq_network=true
+        depends_on:
+            - web
+            - rabbitmq3
+        command: > 
+            bash -c "celery -A celerytest worker -l INFO"
+
+    celery_beat:
+        container_name: "celery-beat"
+        env_file:   .env
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: celery
+        volumes:
+            - .:/code
+        environment:
+          - use_container_rabbitmq_network=true
+        depends_on:
+            - celery_worker
+        command: >
+            bash -c "celery -A celerytest beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler" 
+          
+          #celerytest name of celery app app =celery("celerytest")
+
+      
+    
